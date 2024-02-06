@@ -100,6 +100,25 @@ export default function App() {
     // ✨ implement
   };
 
+  const Protected = () => {
+    if (!localStorage.getItem("token")) redirectToLogin();
+    return (
+      <>
+        <ArticleForm
+          postArticle={postArticle}
+          updateArticle={updateArticle}
+          setCurrentArticleId={setCurrentArticleId}
+        />
+        <Articles
+          articles={articles}
+          getArticles={getArticles}
+          deleteArticle={deleteArticle}
+          setCurrentArticleId={setCurrentArticleId}
+        />
+      </>
+    );
+  };
+
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
     <>
@@ -122,24 +141,7 @@ export default function App() {
         </nav>
         <Routes>
           <Route path="/" element={<LoginForm login={login} />} />
-          <Route
-            path="articles"
-            element={
-              <>
-                <ArticleForm
-                  postArticle={postArticle}
-                  updateArticle={updateArticle}
-                  setCurrentArticleId={setCurrentArticleId}
-                />
-                <Articles
-                  articles={articles}
-                  getArticles={getArticles}
-                  deleteArticle={deleteArticle}
-                  setCurrentArticleId={setCurrentArticleId}
-                />
-              </>
-            }
-          />
+          <Route path="articles" element={<Protected />} />
         </Routes>
         <footer>Bloom Institute of Technology 2022</footer>
       </div>
