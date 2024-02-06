@@ -6,6 +6,7 @@ import Message from "./Message";
 import ArticleForm from "./ArticleForm";
 import Spinner from "./Spinner";
 import axios from "axios";
+import { axiosWithAuth } from "../axios";
 
 const articlesUrl = "http://localhost:9000/api/articles";
 const loginUrl = "http://localhost:9000/api/login";
@@ -68,6 +69,19 @@ export default function App() {
     // If something goes wrong, check the status of the response:
     // if it's a 401 the token might have gone bad, and we should redirect to login.
     // Don't forget to turn off the spinner!
+    setMessage("");
+    axiosWithAuth
+      .get(articlesUrl)
+      .then((res) => {
+        setArticles(res.data);
+        setMessage(res.data.message);
+        setSpinnerOn(false);
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          redirectToLogin();
+        }
+      });
   };
 
   const postArticle = (article) => {
@@ -89,7 +103,7 @@ export default function App() {
   return (
     // ✨ fix the JSX: `Spinner`, `Message`, `LoginForm`, `ArticleForm` and `Articles` expect props ❗
     <>
-      <Spinner />
+      <Spinner on={spinnerOn} />
       <Message message={message} />
       <button id="logout" onClick={logout}>
         Logout from app
@@ -112,8 +126,17 @@ export default function App() {
             path="articles"
             element={
               <>
-                <ArticleForm />
-                <Articles />
+                <ArticleForm
+                  postArticle={postArticle}
+                  updateArticle={updateArticle}
+                  setCurrentArticleId={setCurrentArticleId}
+                />
+                <Articles
+                  articles={articles}
+                  getArticles={getArticles}
+                  deleteArticle={deleteArticle}
+                  setCurrentArticleId={setCurrentArticleId}
+                />
               </>
             }
           />
