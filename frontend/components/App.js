@@ -70,18 +70,22 @@ export default function App() {
     // if it's a 401 the token might have gone bad, and we should redirect to login.
     // Don't forget to turn off the spinner!
     setMessage("");
-    axiosWithAuth
+    setSpinnerOn(true);
+    axiosWithAuth()
       .get(articlesUrl)
       .then((res) => {
-        setArticles(res.data);
+        setArticles(res.data.articles);
         setMessage(res.data.message);
-        setSpinnerOn(false);
       })
       .catch((err) => {
         if (err.response.status === 401) {
+          setMessage(err.response.data.message);
           redirectToLogin();
+        } else {
+          console.error(err);
         }
-      });
+      })
+      .finally(() => setSpinnerOn(false));
   };
 
   const postArticle = (article) => {
@@ -89,34 +93,58 @@ export default function App() {
     // The flow is very similar to the `getArticles` function.
     // You'll know what to do! Use log statements or breakpoints
     // to inspect the response from the server.
+    setMessage("");
+    setSpinnerOn(true);
+    axiosWithAuth()
+      .post(articlesUrl, article)
+      .then((res) => {
+        setArticles([...articles, res.data.article]);
+        setMessage(res.data.message);
+      })
+      .catch((err) => {
+        if (err.response.status === 401) {
+          setMessage(err.response.data.message);
+          redirectToLogin();
+        } else {
+          console.error(err);
+        }
+      })
+      .finally(() => setSpinnerOn(false));
   };
 
   const updateArticle = ({ article_id, article }) => {
-    // ✨ implement
-    // You got this!
+    // ✨ implement. You got this!
+    setMessage("");
+    setSpinnerOn(true);
+    axiosWithAuth()
+      .put(`${articlesUrl}/${article_id}`, article)
+      .then((res) => {
+        setArticles(
+          articles.map((art) => (art.article_id === article_id ? article : art))
+        );
+        setMessage(res.data.message);
+      })
+      .catch((err) => {
+        setMessage(err.response.data.message);
+        console.error(err);
+      })
+      .finally(() => setSpinnerOn(false));
   };
 
   const deleteArticle = (article_id) => {
-    // ✨ implement
-  };
-
-  const Protected = () => {
-    if (!localStorage.getItem("token")) redirectToLogin();
-    return (
-      <>
-        <ArticleForm
-          postArticle={postArticle}
-          updateArticle={updateArticle}
-          setCurrentArticleId={setCurrentArticleId}
-        />
-        <Articles
-          articles={articles}
-          getArticles={getArticles}
-          deleteArticle={deleteArticle}
-          setCurrentArticleId={setCurrentArticleId}
-        />
-      </>
-    );
+    setMessage("");
+    setSpinnerOn(true);
+    axiosWithAuth()
+      .delete(`${articlesUrl}/${article_id}`)
+      .then((res) => {
+        setArticles(articles.filter((art) => art.article_id !== article_id));
+        setMessage(res.data.message);
+      })
+      .catch((err) => {
+        setMessage(err.response.data.message);
+        console.error(err);
+      })
+      .finally(() => setSpinnerOn(false));
   };
 
   return (
@@ -141,7 +169,28 @@ export default function App() {
         </nav>
         <Routes>
           <Route path="/" element={<LoginForm login={login} />} />
-          <Route path="articles" element={<Protected />} />
+          <Route
+            path="articles"
+            element={
+              <>
+                <ArticleForm
+                  postArticle={postArticle}
+                  updateArticle={updateArticle}
+                  setCurrentArticleId={setCurrentArticleId}
+                  currentArticle={articles.find(
+                    (art) => art.article_id === currentArticleId
+                  )}
+                />
+                <Articles
+                  articles={articles}
+                  getArticles={getArticles}
+                  deleteArticle={deleteArticle}
+                  setCurrentArticleId={setCurrentArticleId}
+                  currentArticleId={currentArticleId}
+                />
+              </>
+            }
+          />
         </Routes>
         <footer>Bloom Institute of Technology 2022</footer>
       </div>
